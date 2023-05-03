@@ -129,41 +129,6 @@ impl HwFeedbackInterfaceEntry {
     }
 }
 
-#[allow(dead_code)]
-fn dump_cpu_thermal_info(cpu: usize) {
-    let thermal_cpuid = cpuid::ThermalCpuid::read(cpu).unwrap();
-    println!("ThermalCpuid: {:#x?}", thermal_cpuid);
-    let ptr = msr::HwFeedbackPtr::read(cpu).unwrap();
-    println!("HwFeedbackPtr: {:#x?}", ptr);
-    let config = msr::HwFeedbackConfig::read(cpu).unwrap();
-    println!("HwFeedbackConfig: {:#x?}", config);
-    let thread_config = msr::HwFeedbackThreadConfig::read(cpu).unwrap();
-    println!("HwFeedbackThreadConfig: {:#x?}", thread_config);
-    let hreset_enable = msr::HresetEnable::read(cpu).unwrap();
-    println!("HresetEnable: {:#x?}", hreset_enable);
-    let thread_char = msr::ThreadFeedbackChar::read(cpu).unwrap();
-    println!("ThreadFeedbackChar: {:#x?}", thread_char);
-}
-
-#[allow(dead_code)]
-fn print_cpu_hw_feedback_info(cpu: usize) {
-    let thermal_cpuid = cpuid::ThermalCpuid::read(cpu).unwrap();
-    print!("cpu #{}: ", cpu);
-    if thermal_cpuid.has_hw_feedback() {
-        print!(
-            "hw feedback supported: perf cap={}, energy efficiency cap={}, size={}, row index={} ",
-            thermal_cpuid.has_perf_cap(),
-            thermal_cpuid.has_energy_efficiency_cap(),
-            thermal_cpuid.hw_feedback_size(),
-            thermal_cpuid.hw_feedback_row_index()
-        );
-        if thermal_cpuid.has_itd() {
-            print!("itd: num_itd_class={}", thermal_cpuid.num_itd_class());
-        }
-    }
-    println!();
-}
-
 fn main() -> io::Result<()> {
     let mut table = HwFeedbackInterfaceTable::<1>::new();
     table.read()?;
