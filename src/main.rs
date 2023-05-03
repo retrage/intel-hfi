@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2023 Akira Moroo
+// Intel Thread Director (ITD) utility
 
 use std::{
     fs::File,
