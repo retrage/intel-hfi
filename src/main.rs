@@ -104,6 +104,30 @@ impl From<[u32; 4]> for ThermalCpuid {
 
 impl Cpuid<0x06, 0x0> for ThermalCpuid {}
 
+impl ThermalCpuid {
+    fn has_hw_feedback(&self) -> bool {
+        self.eax.hw_feedback()
+    }
+    fn has_itd(&self) -> bool {
+        self.eax.itd()
+    }
+    fn num_itd_class(&self) -> u8 {
+        self.ecx.num_itd_class() as u8
+    }
+    fn has_perf_cap(&self) -> bool {
+        self.edx.perf_cap()
+    }
+    fn has_energy_efficiency_cap(&self) -> bool {
+        self.edx.energy_efficiency_cap()
+    }
+    fn hw_feedback_size(&self) -> usize {
+        self.edx.hw_feedback_size() as usize + 1
+    }
+    fn hw_feedback_row_index(&self) -> usize {
+        self.edx.hw_feedback_row_index() as usize
+    }
+}
+
 trait Msr<const ADDR: u32> {
     const ADDR: u32 = ADDR;
 
