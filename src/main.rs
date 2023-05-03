@@ -42,6 +42,12 @@ impl HwFeedbackInfo {
                 "HwFeedback is not enabled",
             ));
         }
+        if !cpuid.has_perf_cap() || !cpuid.has_energy_efficiency_cap() {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "HwFeedback capability is not supported",
+            ));
+        }
         Ok(Self {
             cpu,
             addr: (ptr.addr() as usize) << Self::PAGE_SHIFT,

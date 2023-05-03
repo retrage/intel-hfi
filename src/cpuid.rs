@@ -101,9 +101,11 @@ impl ThermalCpuid {
     pub fn has_hw_feedback(&self) -> bool {
         self.eax.hw_feedback()
     }
+    #[allow(dead_code)]
     pub fn has_itd(&self) -> bool {
         self.eax.itd()
     }
+    #[allow(dead_code)]
     pub fn num_itd_class(&self) -> u8 {
         self.ecx.num_itd_class() as u8
     }
