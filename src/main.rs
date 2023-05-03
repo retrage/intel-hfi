@@ -5,7 +5,10 @@
 mod cpuid;
 mod msr;
 
-use std::io;
+use std::{
+    fs::File,
+    io::{self, Read, Seek, SeekFrom},
+};
 
 use crate::cpuid::Cpuid;
 use crate::msr::Msr;
@@ -13,6 +16,7 @@ use crate::msr::Msr;
 #[allow(dead_code)]
 #[derive(Debug)]
 struct HwFeedbackInfo {
+    cpu: usize,
     addr: usize,
     size: usize,
     index: usize,
@@ -39,10 +43,83 @@ impl HwFeedbackInfo {
             ));
         }
         Ok(Self {
+            cpu,
             addr: (ptr.addr() as usize) << Self::PAGE_SHIFT,
             size: Self::PAGE_SIZE * cpuid.hw_feedback_size(),
             index: cpuid.hw_feedback_row_index(),
         })
+    }
+}
+
+#[repr(C, packed)]
+struct HwFeedbackInterfaceTable<const NUM_CPUS: usize> {
+    global_header: HwFeedbackGlobalHeader,
+    entries: [HwFeedbackInterfaceEntry; NUM_CPUS],
+}
+
+impl<const NUM_CPUS: usize> HwFeedbackInterfaceTable<NUM_CPUS> {
+    const NUM_CPUS: usize = NUM_CPUS;
+
+    fn new() -> Self {
+        Self {
+            global_header: HwFeedbackGlobalHeader::default(),
+            entries: [HwFeedbackInterfaceEntry::default(); NUM_CPUS],
+        }
+    }
+
+    fn read(&mut self) -> io::Result<()> {
+        let info = HwFeedbackInfo::new(0)?;
+        self.global_header.read(&info)?;
+        for cpu in 0..Self::NUM_CPUS {
+            let info = HwFeedbackInfo::new(cpu)?;
+            self.entries[cpu].read(&info)?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+#[repr(C, packed)]
+struct HwFeedbackGlobalHeader {
+    timestamp: u64,
+    perf_cap_flags: u8,
+    energy_efficiency_cap_changed: u8,
+    _reserved: [u8; 6],
+}
+
+impl HwFeedbackGlobalHeader {
+    fn read(&mut self, info: &HwFeedbackInfo) -> io::Result<()> {
+        let mut buf = [0u8; std::mem::size_of::<Self>()];
+        let mut fd = File::open("/dev/mem")?;
+        fd.seek(SeekFrom::Start(info.addr as u64))?;
+        fd.read_exact(&mut buf)?;
+        let header = unsafe { std::mem::transmute::<_, Self>(buf) };
+        *self = header;
+        Ok(())
+    }
+}
+
+#[derive(Copy, Clone, Default)]
+#[repr(C, packed)]
+struct HwFeedbackInterfaceEntry {
+    perf_cap: u8,
+    energy_efficiency_cap: u8,
+    _reserved: [u8; 6],
+}
+
+impl HwFeedbackInterfaceEntry {
+    fn read(&mut self, info: &HwFeedbackInfo) -> io::Result<()> {
+        let mut buf = [0u8; std::mem::size_of::<Self>()];
+        let mut fd = File::open("/dev/mem")?;
+        fd.seek(SeekFrom::Start(
+            info.addr as u64
+                + std::mem::size_of::<HwFeedbackGlobalHeader>() as u64
+                + std::mem::size_of::<Self>() as u64 * info.cpu as u64,
+        ))?;
+        fd.read_exact(&mut buf)?;
+        let entry = unsafe { std::mem::transmute::<_, Self>(buf) };
+        *self = entry;
+        Ok(())
     }
 }
 
@@ -82,11 +159,8 @@ fn print_cpu_hw_feedback_info(cpu: usize) {
 }
 
 fn main() -> io::Result<()> {
-    let n_cpus = 32;
+    let mut table = HwFeedbackInterfaceTable::<1>::new();
+    table.read()?;
 
-    for cpu in 0..n_cpus {
-        let hw_feedback_info = HwFeedbackInfo::new(cpu)?;
-        println!("cpu #{}: {:#x?}", cpu, hw_feedback_info);
-    }
     Ok(())
 }
