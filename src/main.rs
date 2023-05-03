@@ -198,6 +198,42 @@ struct HresetEnable {
 }
 impl Msr<IA32_HRESET_ENABLE> for HresetEnable {}
 
+#[allow(dead_code)]
+#[derive(Debug)]
+struct HwFeedbackInfo {
+    addr: usize,
+    size: usize,
+    index: usize,
+}
+
+impl HwFeedbackInfo {
+    const PAGE_SIZE: usize = 4096;
+    const PAGE_SHIFT: usize = Self::PAGE_SIZE.trailing_zeros() as usize;
+
+    fn new(cpu: usize) -> io::Result<Self> {
+        let cpuid = ThermalCpuid::read(cpu)?;
+        if !cpuid.has_hw_feedback() {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "HwFeedback is not supported",
+            ));
+        }
+        let ptr = HwFeedbackPtr::read(cpu)?;
+        let config = HwFeedbackConfig::read(cpu)?;
+        if !ptr.valid() || !config.enable() {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "HwFeedback is not enabled",
+            ));
+        }
+        Ok(Self {
+            addr: (ptr.addr() as usize) << Self::PAGE_SHIFT,
+            size: Self::PAGE_SIZE * cpuid.hw_feedback_size(),
+            index: cpuid.hw_feedback_row_index(),
+        })
+    }
+}
+
 fn main() {
     let n_cpus = 1;
 
