@@ -41,7 +41,7 @@ struct ThermalCpuidEax {
     has_hfi: bool,
     #[bits(3)]
     _reserved: u32,
-    itd: bool,
+    has_itd: bool,
     #[bits(8)]
     _reserved: u32,
 }
@@ -103,7 +103,7 @@ impl ThermalCpuid {
     }
     #[allow(dead_code)]
     pub fn has_itd(&self) -> bool {
-        self.eax.itd()
+        self.eax.has_itd()
     }
     #[allow(dead_code)]
     pub fn num_itd_class(&self) -> u8 {
