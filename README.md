@@ -1,4 +1,4 @@
-# Intel Hardware Feedback Interface tool for Linux
+# Intel Hardware Feedback Interface (HFI) Tool for Linux
 
 ## Requirements
 
