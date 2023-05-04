@@ -6,9 +6,12 @@ mod cpuid;
 mod msr;
 
 use std::{
+    fmt,
     fs::File,
     io::{self, Read, Seek, SeekFrom},
 };
+
+use bitfield_struct::bitfield;
 
 use crate::cpuid::Cpuid;
 use crate::msr::Msr;
@@ -57,6 +60,7 @@ impl HwFeedbackInfo {
     }
 }
 
+#[derive(Debug)]
 #[repr(C, packed)]
 struct HwFeedbackInterfaceTable<const NUM_CPUS: usize> {
     global_header: HwFeedbackGlobalHeader,
@@ -84,13 +88,45 @@ impl<const NUM_CPUS: usize> HwFeedbackInterfaceTable<NUM_CPUS> {
     }
 }
 
+#[bitfield(u8)]
 #[derive(Default)]
+struct PerfCapFlags {
+    changed: bool,
+    request_idle: bool,
+    #[bits(6)]
+    _reserved: u8,
+}
+
+#[bitfield(u8)]
+#[derive(Default)]
+struct EnergyEfficiencyCapChanged {
+    changed: bool,
+    request_idle: bool,
+    #[bits(6)]
+    _reserved: u8,
+}
+
+#[derive(Copy, Clone, Default)]
 #[repr(C, packed)]
 struct HwFeedbackGlobalHeader {
     timestamp: u64,
-    perf_cap_flags: u8,
-    energy_efficiency_cap_changed: u8,
+    perf_cap_flags: PerfCapFlags,
+    energy_efficiency_cap_changed: EnergyEfficiencyCapChanged,
     _reserved: [u8; 6],
+}
+
+impl fmt::Debug for HwFeedbackGlobalHeader {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let timestamp = self.timestamp;
+        f.debug_struct("HwFeedbackGlobalHeader")
+            .field("timestamp", &timestamp)
+            .field("perf_cap_flags", &self.perf_cap_flags)
+            .field(
+                "energy_efficiency_cap_changed",
+                &self.energy_efficiency_cap_changed,
+            )
+            .finish()
+    }
 }
 
 impl HwFeedbackGlobalHeader {
@@ -113,6 +149,15 @@ struct HwFeedbackInterfaceEntry {
     _reserved: [u8; 6],
 }
 
+impl fmt::Debug for HwFeedbackInterfaceEntry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("HwFeedbackInterfaceEntry")
+            .field("perf_cap", &self.perf_cap)
+            .field("energy_efficiency_cap", &self.energy_efficiency_cap)
+            .finish()
+    }
+}
+
 impl HwFeedbackInterfaceEntry {
     fn read(&mut self, info: &HwFeedbackInfo) -> io::Result<()> {
         let mut buf = [0u8; std::mem::size_of::<Self>()];
@@ -130,8 +175,10 @@ impl HwFeedbackInterfaceEntry {
 }
 
 fn main() -> io::Result<()> {
-    let mut table = HwFeedbackInterfaceTable::<1>::new();
+    let mut table = HwFeedbackInterfaceTable::<32>::new();
     table.read()?;
+
+    println!("{:#x?}", table);
 
     Ok(())
 }
