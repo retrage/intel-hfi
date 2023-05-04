@@ -31,11 +31,8 @@ impl HwFeedbackInfo {
 
     fn new(cpu: usize) -> io::Result<Self> {
         let cpuid = cpuid::ThermalCpuid::read(cpu)?;
-        if !cpuid.has_hw_feedback() {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "HwFeedback is not supported",
-            ));
+        if !cpuid.has_hfi() {
+            return Err(io::Error::new(io::ErrorKind::Other, "HFI is not supported"));
         }
         let ptr = msr::HwFeedbackPtr::read(cpu)?;
         let config = msr::HwFeedbackConfig::read(cpu)?;
@@ -54,8 +51,8 @@ impl HwFeedbackInfo {
         Ok(Self {
             cpu,
             addr: (ptr.addr() as usize) << Self::PAGE_SHIFT,
-            size: Self::PAGE_SIZE * cpuid.hw_feedback_size(),
-            index: cpuid.hw_feedback_row_index(),
+            size: Self::PAGE_SIZE * cpuid.hfi_size(),
+            index: cpuid.hfi_row_index(),
         })
     }
 }

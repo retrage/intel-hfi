@@ -38,7 +38,7 @@ pub trait Cpuid<const EAX: u32, const ECX: u32> {
 struct ThermalCpuidEax {
     #[bits(19)]
     _reserved: u32,
-    hw_feedback: bool,
+    has_hfi: bool,
     #[bits(3)]
     _reserved: u32,
     itd: bool,
@@ -69,11 +69,11 @@ struct ThermalCpuidEdx {
     #[bits(6)]
     _reserved: u32,
     #[bits(4)]
-    hw_feedback_size: u32,
+    hfi_size: u32,
     #[bits(4)]
     _reserved: u32,
     #[bits(16)]
-    hw_feedback_row_index: u32,
+    hfi_row_index: u32,
 }
 
 #[allow(dead_code)]
@@ -98,8 +98,8 @@ impl From<[u32; 4]> for ThermalCpuid {
 impl Cpuid<0x06, 0x0> for ThermalCpuid {}
 
 impl ThermalCpuid {
-    pub fn has_hw_feedback(&self) -> bool {
-        self.eax.hw_feedback()
+    pub fn has_hfi(&self) -> bool {
+        self.eax.has_hfi()
     }
     #[allow(dead_code)]
     pub fn has_itd(&self) -> bool {
@@ -115,10 +115,10 @@ impl ThermalCpuid {
     pub fn has_energy_efficiency_cap(&self) -> bool {
         self.edx.energy_efficiency_cap()
     }
-    pub fn hw_feedback_size(&self) -> usize {
-        self.edx.hw_feedback_size() as usize + 1
+    pub fn hfi_size(&self) -> usize {
+        self.edx.hfi_size() as usize + 1
     }
-    pub fn hw_feedback_row_index(&self) -> usize {
-        self.edx.hw_feedback_row_index() as usize
+    pub fn hfi_row_index(&self) -> usize {
+        self.edx.hfi_row_index() as usize
     }
 }
