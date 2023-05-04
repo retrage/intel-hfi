@@ -18,14 +18,14 @@ use crate::msr::Msr;
 
 #[allow(dead_code)]
 #[derive(Debug)]
-struct HwFeedbackInfo {
+struct HfiInfo {
     cpu: usize,
     addr: usize,
     size: usize,
     index: usize,
 }
 
-impl HwFeedbackInfo {
+impl HfiInfo {
     const PAGE_SIZE: usize = 4096;
     const PAGE_SHIFT: usize = Self::PAGE_SIZE.trailing_zeros() as usize;
 
@@ -37,15 +37,12 @@ impl HwFeedbackInfo {
         let ptr = msr::HwFeedbackPtr::read(cpu)?;
         let config = msr::HwFeedbackConfig::read(cpu)?;
         if !ptr.valid() || !config.enable() {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "HwFeedback is not enabled",
-            ));
+            return Err(io::Error::new(io::ErrorKind::Other, "HFI is not enabled"));
         }
         if !cpuid.has_perf_cap() || !cpuid.has_energy_efficiency_cap() {
             return Err(io::Error::new(
                 io::ErrorKind::Other,
-                "HwFeedback capability is not supported",
+                "HFI capability is not supported",
             ));
         }
         Ok(Self {
@@ -59,26 +56,26 @@ impl HwFeedbackInfo {
 
 #[derive(Debug)]
 #[repr(C, packed)]
-struct HwFeedbackInterfaceTable<const NUM_CPUS: usize> {
-    global_header: HwFeedbackGlobalHeader,
-    entries: [HwFeedbackInterfaceEntry; NUM_CPUS],
+struct HfiTable<const NUM_CPUS: usize> {
+    global_header: HfiGlobalHeader,
+    entries: [HfiEntry; NUM_CPUS],
 }
 
-impl<const NUM_CPUS: usize> HwFeedbackInterfaceTable<NUM_CPUS> {
+impl<const NUM_CPUS: usize> HfiTable<NUM_CPUS> {
     const NUM_CPUS: usize = NUM_CPUS;
 
     fn new() -> Self {
         Self {
-            global_header: HwFeedbackGlobalHeader::default(),
-            entries: [HwFeedbackInterfaceEntry::default(); NUM_CPUS],
+            global_header: HfiGlobalHeader::default(),
+            entries: [HfiEntry::default(); NUM_CPUS],
         }
     }
 
     fn read(&mut self) -> io::Result<()> {
-        let info = HwFeedbackInfo::new(0)?;
+        let info = HfiInfo::new(0)?;
         self.global_header.read(&info)?;
         for cpu in 0..Self::NUM_CPUS {
-            let info = HwFeedbackInfo::new(cpu)?;
+            let info = HfiInfo::new(cpu)?;
             self.entries[cpu].read(&info)?;
         }
         Ok(())
@@ -105,17 +102,17 @@ struct EnergyEfficiencyCapChanged {
 
 #[derive(Copy, Clone, Default)]
 #[repr(C, packed)]
-struct HwFeedbackGlobalHeader {
+struct HfiGlobalHeader {
     timestamp: u64,
     perf_cap_flags: PerfCapFlags,
     energy_efficiency_cap_changed: EnergyEfficiencyCapChanged,
     _reserved: [u8; 6],
 }
 
-impl fmt::Debug for HwFeedbackGlobalHeader {
+impl fmt::Debug for HfiGlobalHeader {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let timestamp = self.timestamp;
-        f.debug_struct("HwFeedbackGlobalHeader")
+        f.debug_struct("HfiGlobalHeader")
             .field("timestamp", &timestamp)
             .field("perf_cap_flags", &self.perf_cap_flags)
             .field(
@@ -126,8 +123,8 @@ impl fmt::Debug for HwFeedbackGlobalHeader {
     }
 }
 
-impl HwFeedbackGlobalHeader {
-    fn read(&mut self, info: &HwFeedbackInfo) -> io::Result<()> {
+impl HfiGlobalHeader {
+    fn read(&mut self, info: &HfiInfo) -> io::Result<()> {
         let mut buf = [0u8; std::mem::size_of::<Self>()];
         let mut fd = File::open("/dev/mem")?;
         fd.seek(SeekFrom::Start(info.addr as u64))?;
@@ -140,28 +137,28 @@ impl HwFeedbackGlobalHeader {
 
 #[derive(Copy, Clone, Default)]
 #[repr(C, packed)]
-struct HwFeedbackInterfaceEntry {
+struct HfiEntry {
     perf_cap: u8,
     energy_efficiency_cap: u8,
     _reserved: [u8; 6],
 }
 
-impl fmt::Debug for HwFeedbackInterfaceEntry {
+impl fmt::Debug for HfiEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("HwFeedbackInterfaceEntry")
+        f.debug_struct("HfiEntry")
             .field("perf_cap", &self.perf_cap)
             .field("energy_efficiency_cap", &self.energy_efficiency_cap)
             .finish()
     }
 }
 
-impl HwFeedbackInterfaceEntry {
-    fn read(&mut self, info: &HwFeedbackInfo) -> io::Result<()> {
+impl HfiEntry {
+    fn read(&mut self, info: &HfiInfo) -> io::Result<()> {
         let mut buf = [0u8; std::mem::size_of::<Self>()];
         let mut fd = File::open("/dev/mem")?;
         fd.seek(SeekFrom::Start(
             info.addr as u64
-                + std::mem::size_of::<HwFeedbackGlobalHeader>() as u64
+                + std::mem::size_of::<HfiGlobalHeader>() as u64
                 + std::mem::size_of::<Self>() as u64 * info.cpu as u64,
         ))?;
         fd.read_exact(&mut buf)?;
@@ -172,7 +169,7 @@ impl HwFeedbackInterfaceEntry {
 }
 
 fn main() -> io::Result<()> {
-    let mut table = HwFeedbackInterfaceTable::<32>::new();
+    let mut table = HfiTable::<32>::new();
     table.read()?;
 
     println!("{:#x?}", table);
