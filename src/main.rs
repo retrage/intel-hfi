@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2023 Akira Moroo
-// Intel Thread Director (ITD) utility
+// Intel Hardware Feedback Interface (HFI) utility
 
 mod cpuid;
 mod hfi;

@@ -1,5 +1,5 @@
 [package]
-name = "intel-itd"
+name = "intel-hfi"
 version = "0.1.0"
 edition = "2021"
 
