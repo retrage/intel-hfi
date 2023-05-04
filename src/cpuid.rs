@@ -65,7 +65,7 @@ struct ThermalCpuidEcx {
 #[bitfield(u32)]
 struct ThermalCpuidEdx {
     perf_cap: bool,
-    energy_efficiency_cap: bool,
+    ee_cap: bool,
     #[bits(6)]
     _reserved: u32,
     #[bits(4)]
@@ -112,8 +112,8 @@ impl ThermalCpuid {
     pub fn has_perf_cap(&self) -> bool {
         self.edx.perf_cap()
     }
-    pub fn has_energy_efficiency_cap(&self) -> bool {
-        self.edx.energy_efficiency_cap()
+    pub fn has_ee_cap(&self) -> bool {
+        self.edx.ee_cap()
     }
     pub fn hfi_size(&self) -> usize {
         self.edx.hfi_size() as usize + 1

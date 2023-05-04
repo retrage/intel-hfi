@@ -36,7 +36,7 @@ impl HfiInfo {
         if !ptr.valid() || !config.enable() {
             return Err(io::Error::new(io::ErrorKind::Other, "HFI is not enabled"));
         }
-        if !cpuid.has_perf_cap() || !cpuid.has_energy_efficiency_cap() {
+        if !cpuid.has_perf_cap() || !cpuid.has_ee_cap() {
             return Err(io::Error::new(
                 io::ErrorKind::Other,
                 "HFI capability is not supported",
@@ -81,7 +81,7 @@ impl<const NUM_CPUS: usize> HfiTable<NUM_CPUS> {
 
 #[bitfield(u8)]
 #[derive(Default)]
-struct PerfCapFlags {
+struct PerfCap {
     changed: bool,
     request_idle: bool,
     #[bits(6)]
@@ -90,7 +90,7 @@ struct PerfCapFlags {
 
 #[bitfield(u8)]
 #[derive(Default)]
-struct EnergyEfficiencyCapChanged {
+struct EECap {
     changed: bool,
     request_idle: bool,
     #[bits(6)]
@@ -101,8 +101,8 @@ struct EnergyEfficiencyCapChanged {
 #[repr(C, packed)]
 struct HfiGlobalHeader {
     timestamp: u64,
-    perf_cap_flags: PerfCapFlags,
-    energy_efficiency_cap_changed: EnergyEfficiencyCapChanged,
+    perf_cap: PerfCap,
+    ee_cap: EECap,
     _reserved: [u8; 6],
 }
 
@@ -122,7 +122,7 @@ impl HfiGlobalHeader {
 #[repr(C, packed)]
 struct HfiEntry {
     perf_cap: u8,
-    energy_efficiency_cap: u8,
+    ee_cap: u8,
     _reserved: [u8; 6],
 }
 
