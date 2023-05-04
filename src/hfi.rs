@@ -2,7 +2,6 @@
 // Copyright (C) 2023 Akira Moroo
 
 use std::{
-    fmt,
     fs::File,
     io::{self, Read, Seek, SeekFrom},
 };
@@ -98,27 +97,13 @@ struct EnergyEfficiencyCapChanged {
     _reserved: u8,
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Debug, Default)]
 #[repr(C, packed)]
 struct HfiGlobalHeader {
     timestamp: u64,
     perf_cap_flags: PerfCapFlags,
     energy_efficiency_cap_changed: EnergyEfficiencyCapChanged,
     _reserved: [u8; 6],
-}
-
-impl fmt::Debug for HfiGlobalHeader {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let timestamp = self.timestamp;
-        f.debug_struct("HfiGlobalHeader")
-            .field("timestamp", &timestamp)
-            .field("perf_cap_flags", &self.perf_cap_flags)
-            .field(
-                "energy_efficiency_cap_changed",
-                &self.energy_efficiency_cap_changed,
-            )
-            .finish()
-    }
 }
 
 impl HfiGlobalHeader {
@@ -133,21 +118,12 @@ impl HfiGlobalHeader {
     }
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Debug, Default)]
 #[repr(C, packed)]
 struct HfiEntry {
     perf_cap: u8,
     energy_efficiency_cap: u8,
     _reserved: [u8; 6],
-}
-
-impl fmt::Debug for HfiEntry {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("HfiEntry")
-            .field("perf_cap", &self.perf_cap)
-            .field("energy_efficiency_cap", &self.energy_efficiency_cap)
-            .finish()
-    }
 }
 
 impl HfiEntry {
