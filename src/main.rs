@@ -14,6 +14,7 @@ use crate::hfi::HfiTable;
 fn main() -> io::Result<()> {
     let cpu = 1;
     let info = hfi::HfiInfo::new(cpu)?;
+    println!("HFI Table:");
     println!("{}", info);
 
     let mut table = HfiTable::<32>::new();

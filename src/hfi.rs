@@ -54,12 +54,8 @@ impl HfiInfo {
 
 impl fmt::Display for HfiInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "HFI Table: [{:#x}-{:#x}]",
-            self.addr,
-            self.addr + self.size - 1
-        )
+        writeln!(f, "  Address: {:#x}", self.addr)?;
+        write!(f, "  Size: {:#x}", self.size)
     }
 }
 
@@ -92,7 +88,7 @@ impl<const NUM_CPUS: usize> HfiTable<NUM_CPUS> {
 
 impl<const NUM_CPUS: usize> fmt::Display for HfiTable<NUM_CPUS> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.global_header)?;
+        writeln!(f, "{}", self.global_header)?;
         for cpu in 0..Self::NUM_CPUS {
             writeln!(f, "CPU #{}: {}", cpu, self.entries[cpu])?;
         }
@@ -102,41 +98,17 @@ impl<const NUM_CPUS: usize> fmt::Display for HfiTable<NUM_CPUS> {
 
 #[bitfield(u8)]
 #[derive(Default)]
-struct PerfCap {
+struct CapFlags {
     changed: bool,
     request_idle: bool,
     #[bits(6)]
     _reserved: u8,
 }
 
-impl fmt::Display for PerfCap {
+impl fmt::Display for CapFlags {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Changed: {}, RequestIdle: {}",
-            self.changed(),
-            self.request_idle()
-        )
-    }
-}
-
-#[bitfield(u8)]
-#[derive(Default)]
-struct EECap {
-    changed: bool,
-    request_idle: bool,
-    #[bits(6)]
-    _reserved: u8,
-}
-
-impl fmt::Display for EECap {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Changed: {}, RequestIdle: {}",
-            self.changed(),
-            self.request_idle()
-        )
+        writeln!(f, "    Updated: {}", self.changed())?;
+        write!(f, "    Idle Requested: {}", self.request_idle())
     }
 }
 
@@ -144,8 +116,8 @@ impl fmt::Display for EECap {
 #[repr(C, packed)]
 struct HfiGlobalHeader {
     timestamp: u64,
-    perf_cap: PerfCap,
-    ee_cap: EECap,
+    perf_cap: CapFlags,
+    ee_cap: CapFlags,
     _reserved: [u8; 6],
 }
 
@@ -164,10 +136,11 @@ impl HfiGlobalHeader {
 impl fmt::Display for HfiGlobalHeader {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let timestamp = self.timestamp;
-        writeln!(f, "Timestamp: {}", timestamp)?;
-        writeln!(f, "PerfCap: {}", self.perf_cap)?;
-        writeln!(f, "EECap: {}", self.ee_cap)?;
-        Ok(())
+        writeln!(f, "  Timestamp: {}", timestamp)?;
+        writeln!(f, "  Performance Capability:")?;
+        writeln!(f, "{}", self.perf_cap)?;
+        writeln!(f, "  Energy Efficiency Capability:")?;
+        write!(f, "{}", self.ee_cap)
     }
 }
 
@@ -197,6 +170,10 @@ impl HfiEntry {
 
 impl fmt::Display for HfiEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "PerfCap: {}, EECap: {}", self.perf_cap, self.ee_cap)
+        write!(
+            f,
+            "Performance Capability: {}, Energy Efficiency Capability: {}",
+            self.perf_cap, self.ee_cap
+        )
     }
 }
