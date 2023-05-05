@@ -57,7 +57,7 @@ struct ThermalCpuidEcx {
     #[bits(8)]
     _reserved: u32,
     #[bits(8)]
-    num_itd_class: u32,
+    num_itd_classes: u32,
     #[bits(16)]
     _reserved: u32,
 }
@@ -101,13 +101,11 @@ impl ThermalCpuid {
     pub fn has_hfi(&self) -> bool {
         self.eax.has_hfi()
     }
-    #[allow(dead_code)]
     pub fn has_itd(&self) -> bool {
         self.eax.has_itd()
     }
-    #[allow(dead_code)]
-    pub fn num_itd_class(&self) -> u8 {
-        self.ecx.num_itd_class() as u8
+    pub fn num_itd_classes(&self) -> u8 {
+        self.ecx.num_itd_classes() as u8
     }
     pub fn has_perf_cap(&self) -> bool {
         self.edx.perf_cap()
