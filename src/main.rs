@@ -15,6 +15,9 @@ const NUM_CPUS: usize = 32;
 
 #[derive(Parser)]
 struct Cli {
+    /// CPU number
+    #[arg(short, long, default_value = "0")]
+    cpu: usize,
     #[command(subcommand)]
     command: Commands,
 }
@@ -27,17 +30,17 @@ enum Commands {
 
 #[derive(Args)]
 struct HfiArgs {
-    /// CPU number
-    #[arg(short, long, default_value = "0")]
-    cpu: usize,
+    #[arg(short, long)]
+    all: bool,
 }
 
 fn main() -> io::Result<()> {
     let cli = Cli::parse();
 
+    let info = hfi::HfiInfo::new(cli.cpu)?;
+
     match &cli.command {
         Commands::Hfi(args) => {
-            let info = hfi::HfiInfo::new(args.cpu)?;
             println!("HFI Table:");
             println!("{}", info);
 
@@ -45,8 +48,16 @@ fn main() -> io::Result<()> {
             table.read(&info)?;
 
             println!("{}", table.header);
-            println!("  CPU {}:", args.cpu);
-            println!("{}", table.entries[args.cpu]);
+
+            if args.all {
+                for cpu in 0..NUM_CPUS {
+                    println!("  CPU {}:", cpu);
+                    println!("{}", table.entries[cpu]);
+                }
+            } else {
+                println!("  CPU {}:", cli.cpu);
+                println!("{}", table.entries[cli.cpu]);
+            }
         }
     }
 
