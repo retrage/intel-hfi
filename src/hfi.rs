@@ -62,7 +62,7 @@ impl fmt::Display for HfiInfo {
 #[derive(Debug)]
 #[repr(C, packed)]
 pub struct HfiTable<const NUM_CPUS: usize> {
-    global_header: HfiGlobalHeader,
+    header: HfiHeader,
     entries: [HfiEntry; NUM_CPUS],
 }
 
@@ -71,13 +71,13 @@ impl<const NUM_CPUS: usize> HfiTable<NUM_CPUS> {
 
     pub fn new() -> Self {
         Self {
-            global_header: HfiGlobalHeader::default(),
+            header: HfiHeader::default(),
             entries: [HfiEntry::default(); NUM_CPUS],
         }
     }
 
     pub fn read(&mut self, info: &HfiInfo) -> io::Result<()> {
-        self.global_header.read(info)?;
+        self.header.read(info)?;
         for cpu in 0..Self::NUM_CPUS {
             let info = HfiInfo::new(cpu)?;
             self.entries[cpu].read(&info)?;
@@ -88,7 +88,7 @@ impl<const NUM_CPUS: usize> HfiTable<NUM_CPUS> {
 
 impl<const NUM_CPUS: usize> fmt::Display for HfiTable<NUM_CPUS> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "{}", self.global_header)?;
+        writeln!(f, "{}", self.header)?;
         for cpu in 0..Self::NUM_CPUS {
             writeln!(f, "CPU #{}: {}", cpu, self.entries[cpu])?;
         }
@@ -114,14 +114,14 @@ impl fmt::Display for CapFlags {
 
 #[derive(Copy, Clone, Debug, Default)]
 #[repr(C, packed)]
-struct HfiGlobalHeader {
+struct HfiHeader {
     timestamp: u64,
     perf_cap: CapFlags,
     ee_cap: CapFlags,
     _reserved: [u8; 6],
 }
 
-impl HfiGlobalHeader {
+impl HfiHeader {
     fn read(&mut self, info: &HfiInfo) -> io::Result<()> {
         let mut buf = [0u8; std::mem::size_of::<Self>()];
         let mut fd = File::open("/dev/mem")?;
@@ -133,7 +133,7 @@ impl HfiGlobalHeader {
     }
 }
 
-impl fmt::Display for HfiGlobalHeader {
+impl fmt::Display for HfiHeader {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let timestamp = self.timestamp;
         writeln!(f, "  Timestamp: {}", timestamp)?;
@@ -158,7 +158,7 @@ impl HfiEntry {
         let mut fd = File::open("/dev/mem")?;
         fd.seek(SeekFrom::Start(
             info.addr as u64
-                + std::mem::size_of::<HfiGlobalHeader>() as u64
+                + std::mem::size_of::<HfiHeader>() as u64
                 + std::mem::size_of::<Self>() as u64 * info.cpu as u64,
         ))?;
         fd.read_exact(&mut buf)?;
