@@ -17,7 +17,7 @@ use crate::{
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct HfiInfo {
-    cpu: usize,
+    pub cpu: usize,
     pub addr: usize,
     pub size: usize,
     index: usize,
@@ -63,62 +63,6 @@ impl fmt::Display for HfiInfo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "  Address: {:#x}", self.addr)?;
         write!(f, "  Size: {:#x}", self.size)
-    }
-}
-
-#[allow(dead_code)]
-pub struct ItdInfo {
-    cpu: usize,
-    addr: usize,
-    size: usize,
-}
-
-impl ItdInfo {
-    pub fn new(hfi_info: &HfiInfo) -> Self {
-        assert!(hfi_info.has_itd());
-        Self {
-            cpu: hfi_info.cpu,
-            addr: hfi_info.addr,
-            size: hfi_info.size,
-        }
-    }
-
-    pub fn num_itd_classes(&self) -> Option<usize> {
-        match cpuid::ThermalCpuid::read(self.cpu) {
-            Ok(cpuid) => Some(cpuid.num_itd_classes() as usize),
-            Err(_) => None,
-        }
-    }
-
-    pub fn itd_enabled(&self) -> bool {
-        match msr::HwFeedbackThreadConfig::read(self.cpu) {
-            Ok(config) => config.enable(),
-            Err(_) => false,
-        }
-    }
-
-    pub fn hreset_enabled(&self) -> bool {
-        match msr::HresetEnable::read(self.cpu) {
-            Ok(config) => config.enable(),
-            Err(_) => false,
-        }
-    }
-
-    pub fn has_valid_class_id(&self) -> bool {
-        match msr::ThreadFeedbackChar::read(self.cpu) {
-            Ok(char) => char.valid(),
-            Err(_) => false,
-        }
-    }
-
-    pub fn class_id(&self) -> Option<usize> {
-        match msr::ThreadFeedbackChar::read(self.cpu) {
-            Ok(char) => match char.valid() {
-                true => Some(char.class_id() as usize),
-                false => None,
-            },
-            Err(_) => None,
-        }
     }
 }
 
