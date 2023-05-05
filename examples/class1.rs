@@ -2,6 +2,7 @@
 // Copyright (C) 2023 Akira Moroo
 
 //! Intel Thread Director (ITD) Class 1 example
+//! Class 1: Integer or floating-point vectorized code, excluding Intel Deep Learning Boost (Intel DL Boost) code.
 //!
 //! Intel 64 and IA-32 Architectures Optimization Reference Manual
 //! Example 2-2. Class 1 Pseudo-code Snippet
