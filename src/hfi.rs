@@ -2,6 +2,7 @@
 // Copyright (C) 2023 Akira Moroo
 
 use std::{
+    fmt,
     fs::File,
     io::{self, Read, Seek, SeekFrom},
 };
@@ -15,10 +16,10 @@ use crate::{
 
 #[allow(dead_code)]
 #[derive(Debug)]
-struct HfiInfo {
+pub struct HfiInfo {
     cpu: usize,
-    addr: usize,
-    size: usize,
+    pub addr: usize,
+    pub size: usize,
     index: usize,
 }
 
@@ -26,7 +27,7 @@ impl HfiInfo {
     const PAGE_SIZE: usize = 4096;
     const PAGE_SHIFT: usize = Self::PAGE_SIZE.trailing_zeros() as usize;
 
-    fn new(cpu: usize) -> io::Result<Self> {
+    pub fn new(cpu: usize) -> io::Result<Self> {
         let cpuid = cpuid::ThermalCpuid::read(cpu)?;
         if !cpuid.has_hfi() {
             return Err(io::Error::new(io::ErrorKind::Other, "HFI is not supported"));
@@ -51,6 +52,17 @@ impl HfiInfo {
     }
 }
 
+impl fmt::Display for HfiInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "HFI Table: [{:#x}-{:#x}]",
+            self.addr,
+            self.addr + self.size - 1
+        )
+    }
+}
+
 #[derive(Debug)]
 #[repr(C, packed)]
 pub struct HfiTable<const NUM_CPUS: usize> {
@@ -68,12 +80,21 @@ impl<const NUM_CPUS: usize> HfiTable<NUM_CPUS> {
         }
     }
 
-    pub fn read(&mut self) -> io::Result<()> {
-        let info = HfiInfo::new(0)?;
-        self.global_header.read(&info)?;
+    pub fn read(&mut self, info: &HfiInfo) -> io::Result<()> {
+        self.global_header.read(info)?;
         for cpu in 0..Self::NUM_CPUS {
             let info = HfiInfo::new(cpu)?;
             self.entries[cpu].read(&info)?;
+        }
+        Ok(())
+    }
+}
+
+impl<const NUM_CPUS: usize> fmt::Display for HfiTable<NUM_CPUS> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.global_header)?;
+        for cpu in 0..Self::NUM_CPUS {
+            writeln!(f, "CPU #{}: {}", cpu, self.entries[cpu])?;
         }
         Ok(())
     }
@@ -88,6 +109,17 @@ struct PerfCap {
     _reserved: u8,
 }
 
+impl fmt::Display for PerfCap {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Changed: {}, RequestIdle: {}",
+            self.changed(),
+            self.request_idle()
+        )
+    }
+}
+
 #[bitfield(u8)]
 #[derive(Default)]
 struct EECap {
@@ -95,6 +127,17 @@ struct EECap {
     request_idle: bool,
     #[bits(6)]
     _reserved: u8,
+}
+
+impl fmt::Display for EECap {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Changed: {}, RequestIdle: {}",
+            self.changed(),
+            self.request_idle()
+        )
+    }
 }
 
 #[derive(Copy, Clone, Debug, Default)]
@@ -114,6 +157,16 @@ impl HfiGlobalHeader {
         fd.read_exact(&mut buf)?;
         let header = unsafe { std::mem::transmute::<_, Self>(buf) };
         *self = header;
+        Ok(())
+    }
+}
+
+impl fmt::Display for HfiGlobalHeader {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let timestamp = self.timestamp;
+        writeln!(f, "Timestamp: {}", timestamp)?;
+        writeln!(f, "PerfCap: {}", self.perf_cap)?;
+        writeln!(f, "EECap: {}", self.ee_cap)?;
         Ok(())
     }
 }
@@ -139,5 +192,11 @@ impl HfiEntry {
         let entry = unsafe { std::mem::transmute::<_, Self>(buf) };
         *self = entry;
         Ok(())
+    }
+}
+
+impl fmt::Display for HfiEntry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "PerfCap: {}, EECap: {}", self.perf_cap, self.ee_cap)
     }
 }

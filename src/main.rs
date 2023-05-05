@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (C) 2023 Akira Moroo
-// Intel Hardware Feedback Interface (HFI) utility
+
+//! Intel Hardware Feedback Interface (HFI) utility
 
 mod cpuid;
 mod hfi;
@@ -11,10 +12,14 @@ use std::io;
 use crate::hfi::HfiTable;
 
 fn main() -> io::Result<()> {
-    let mut table = HfiTable::<32>::new();
-    table.read()?;
+    let cpu = 1;
+    let info = hfi::HfiInfo::new(cpu)?;
+    println!("{}", info);
 
-    println!("{:#x?}", table);
+    let mut table = HfiTable::<32>::new();
+    table.read(&info)?;
+
+    print!("{}", table);
 
     Ok(())
 }
