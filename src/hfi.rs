@@ -62,8 +62,8 @@ impl fmt::Display for HfiInfo {
 #[derive(Debug)]
 #[repr(C, packed)]
 pub struct HfiTable<const NUM_CPUS: usize> {
-    header: HfiHeader,
-    entries: [HfiEntry; NUM_CPUS],
+    pub header: HfiHeader,
+    pub entries: [HfiEntry; NUM_CPUS],
 }
 
 impl<const NUM_CPUS: usize> HfiTable<NUM_CPUS> {
@@ -114,7 +114,7 @@ impl fmt::Display for CapFlags {
 
 #[derive(Copy, Clone, Debug, Default)]
 #[repr(C, packed)]
-struct HfiHeader {
+pub struct HfiHeader {
     timestamp: u64,
     perf_cap: CapFlags,
     ee_cap: CapFlags,
@@ -146,7 +146,7 @@ impl fmt::Display for HfiHeader {
 
 #[derive(Copy, Clone, Debug, Default)]
 #[repr(C, packed)]
-struct HfiEntry {
+pub struct HfiEntry {
     perf_cap: u8,
     ee_cap: u8,
     _reserved: [u8; 6],
@@ -170,10 +170,7 @@ impl HfiEntry {
 
 impl fmt::Display for HfiEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Performance Capability: {}, Energy Efficiency Capability: {}",
-            self.perf_cap, self.ee_cap
-        )
+        writeln!(f, "    Performance Capability: {}", self.perf_cap)?;
+        write!(f, "    Energy Efficiency Capability: {}", self.ee_cap)
     }
 }

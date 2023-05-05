@@ -7,20 +7,48 @@ mod cpuid;
 mod hfi;
 mod msr;
 
+use crate::hfi::HfiTable;
+use clap::{Args, Parser, Subcommand};
 use std::io;
 
-use crate::hfi::HfiTable;
+const NUM_CPUS: usize = 32;
+
+#[derive(Parser)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Dumps HFI table
+    Hfi(HfiArgs),
+}
+
+#[derive(Args)]
+struct HfiArgs {
+    /// CPU number
+    #[arg(short, long, default_value = "0")]
+    cpu: usize,
+}
 
 fn main() -> io::Result<()> {
-    let cpu = 1;
-    let info = hfi::HfiInfo::new(cpu)?;
-    println!("HFI Table:");
-    println!("{}", info);
+    let cli = Cli::parse();
 
-    let mut table = HfiTable::<32>::new();
-    table.read(&info)?;
+    match &cli.command {
+        Commands::Hfi(args) => {
+            let info = hfi::HfiInfo::new(args.cpu)?;
+            println!("HFI Table:");
+            println!("{}", info);
 
-    print!("{}", table);
+            let mut table = HfiTable::<NUM_CPUS>::new();
+            table.read(&info)?;
+
+            println!("{}", table.header);
+            println!("  CPU {}:", args.cpu);
+            println!("{}", table.entries[args.cpu]);
+        }
+    }
 
     Ok(())
 }
