@@ -120,3 +120,55 @@ impl ThermalCpuid {
         self.edx.hfi_row_index() as usize
     }
 }
+
+#[bitfield(u32)]
+struct NativeModelIdEax {
+    #[bits(24)]
+    model_id: u32,
+    #[bits(8)]
+    core_type: u32,
+}
+
+#[allow(dead_code)]
+#[derive(Debug)]
+pub struct NativeModelIdCpuid {
+    eax: NativeModelIdEax,
+    ebx: ReservedCpuidExx,
+    ecx: ReservedCpuidExx,
+    edx: ReservedCpuidExx,
+}
+
+impl From<[u32; 4]> for NativeModelIdCpuid {
+    fn from(value: [u32; 4]) -> Self {
+        let eax = NativeModelIdEax::from(value[0]);
+        let ebx = ReservedCpuidExx::from(value[1]);
+        let ecx = ReservedCpuidExx::from(value[2]);
+        let edx = ReservedCpuidExx::from(value[3]);
+        Self { eax, ebx, ecx, edx }
+    }
+}
+
+impl Cpuid<0x1a, 0x0> for NativeModelIdCpuid {}
+
+#[derive(Debug)]
+pub enum CoreType {
+    Unknown,
+    Atom,
+    Core,
+}
+
+impl From<u32> for CoreType {
+    fn from(value: u32) -> Self {
+        match value {
+            0x20 => Self::Atom,
+            0x40 => Self::Core,
+            _ => Self::Unknown,
+        }
+    }
+}
+
+impl NativeModelIdCpuid {
+    pub fn core_type(&self) -> CoreType {
+        CoreType::from(self.eax.core_type())
+    }
+}

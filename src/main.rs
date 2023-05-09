@@ -8,7 +8,7 @@ mod hfi;
 mod itd;
 mod msr;
 
-use crate::{hfi::HfiTable, itd::ItdInfo};
+use crate::{hfi::HfiTable, itd::ItdInfo, cpuid::Cpuid};
 use clap::{Args, Parser, Subcommand};
 use std::io;
 
@@ -45,6 +45,10 @@ struct ItdArgs {
 
 fn main() -> io::Result<()> {
     let cli = Cli::parse();
+
+    let cpuid = cpuid::NativeModelIdCpuid::read(cli.cpu)?;
+    println!("CPU: {}", cli.cpu);
+    println!("  CoreType: {:?}", cpuid.core_type());
 
     let hfi_info = hfi::HfiInfo::new(cli.cpu)?;
     println!("HFI Table:");
