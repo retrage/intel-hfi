@@ -35,6 +35,12 @@ pub trait Cpuid<const EAX: u32, const ECX: u32> {
 }
 
 #[bitfield(u32)]
+struct ReservedCpuidExx {
+    #[bits(32)]
+    _reserved: u32,
+}
+
+#[bitfield(u32)]
 struct ThermalCpuidEax {
     #[bits(19)]
     _reserved: u32,
@@ -43,12 +49,6 @@ struct ThermalCpuidEax {
     _reserved: u32,
     has_itd: bool,
     #[bits(8)]
-    _reserved: u32,
-}
-
-#[bitfield(u32)]
-struct ThermalCpuidEbx {
-    #[bits(32)]
     _reserved: u32,
 }
 
@@ -80,7 +80,7 @@ struct ThermalCpuidEdx {
 #[derive(Debug)]
 pub struct ThermalCpuid {
     eax: ThermalCpuidEax,
-    ebx: ThermalCpuidEbx,
+    ebx: ReservedCpuidExx,
     ecx: ThermalCpuidEcx,
     edx: ThermalCpuidEdx,
 }
@@ -88,7 +88,7 @@ pub struct ThermalCpuid {
 impl From<[u32; 4]> for ThermalCpuid {
     fn from(value: [u32; 4]) -> Self {
         let eax = ThermalCpuidEax::from(value[0]);
-        let ebx = ThermalCpuidEbx::from(value[1]);
+        let ebx = ReservedCpuidExx::from(value[1]);
         let ecx = ThermalCpuidEcx::from(value[2]);
         let edx = ThermalCpuidEdx::from(value[3]);
         Self { eax, ebx, ecx, edx }
