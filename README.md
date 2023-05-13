@@ -1,4 +1,6 @@
-# Intel Hardware Feedback Interface (HFI) Tool for Linux
+# intel-hfi
+
+Intel Hardware Feedback Interface (HFI) and Intel Thread Director (ITD) Tool for Linux.
 
 ## Requirements
 
