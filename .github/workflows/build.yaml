@@ -1,0 +1,18 @@
+name: Build
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust components
+        run: rustup component add rustfmt clippy
+      - name: Build
+        run: cargo build --all-targets --all-features
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features
+      - name: Formatting
+        run: cargo fmt --all -- --check

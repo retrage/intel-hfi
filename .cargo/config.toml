@@ -1,2 +1,2 @@
 [build]
-rustflags = ["-C", "target-feature=+avx"]
+rustflags = ["-D", "warnings", "-C", "target-feature=+avx"]
