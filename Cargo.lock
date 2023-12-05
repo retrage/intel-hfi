@@ -52,9 +52,9 @@ dependencies = [
 
 [[package]]
 name = "bitfield-struct"
-version = "0.4.1"
+version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc92b6a6ac8f8176ab4764440f5129ad73d557c532b7f5c324a71846fd25a9c6"
+checksum = "48adbf9313c68e023d32f441d19942226212ade3999fb22872c37a70a1b5366a"
 dependencies = [
  "proc-macro2",
  "quote",
