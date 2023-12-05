@@ -52,7 +52,6 @@ impl<const NUM_CPUS: usize> fmt::Display for EhfiTable<NUM_CPUS> {
 }
 
 #[bitfield(u8)]
-#[derive(Default)]
 struct CapFlags {
     changed: bool,
     request_idle: bool,
