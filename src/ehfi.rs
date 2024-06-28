@@ -74,12 +74,14 @@ pub struct EhfiHeader {
 }
 
 impl EhfiHeader {
+    const SIZE: usize = std::mem::size_of::<Self>();
+
     fn read(&mut self, info: &HfiInfo) -> io::Result<()> {
-        let mut buf = [0u8; std::mem::size_of::<EhfiHeader>()];
+        let mut buf = [0u8; Self::SIZE];
         let mut fd = File::open("/dev/mem")?;
         fd.seek(SeekFrom::Start(info.addr as u64))?;
         fd.read_exact(&mut buf)?;
-        let header = unsafe { std::mem::transmute::<_, Self>(buf) };
+        let header = unsafe { std::mem::transmute::<[u8; Self::SIZE], Self>(buf) };
         *self = header;
         Ok(())
     }
@@ -113,8 +115,10 @@ pub struct EhfiEntry {
 }
 
 impl EhfiEntry {
+    const SIZE: usize = std::mem::size_of::<Self>();
+
     fn read(&mut self, info: &HfiInfo) -> io::Result<()> {
-        let mut buf = [0u8; std::mem::size_of::<EhfiEntry>()];
+        let mut buf = [0u8; Self::SIZE];
         let mut fd = File::open("/dev/mem")?;
         fd.seek(SeekFrom::Start(
             info.addr as u64
@@ -122,7 +126,7 @@ impl EhfiEntry {
                 + std::mem::size_of::<Self>() as u64 * info.cpu as u64,
         ))?;
         fd.read_exact(&mut buf)?;
-        let entry = unsafe { std::mem::transmute::<_, Self>(buf) };
+        let entry = unsafe { std::mem::transmute::<[u8; Self::SIZE], Self>(buf) };
         *self = entry;
         Ok(())
     }
