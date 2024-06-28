@@ -22,6 +22,7 @@ pub trait Msr<const ADDR: u32> {
         Ok(Self::from(u64::from_le_bytes(buf)))
     }
 
+    #[allow(dead_code)]
     fn write(self, cpu: usize, value: u64) -> io::Result<()>
     where
         Self: Into<u64>,
