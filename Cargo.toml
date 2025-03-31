@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 bitfield-struct = "0.10.1"
-clap = { version = "4.5.32", features = ["derive"] }
+clap = { version = "4.5.34", features = ["derive"] }
