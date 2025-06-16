@@ -30,18 +30,15 @@ impl HfiInfo {
     pub fn new(cpu: usize) -> io::Result<Self> {
         let cpuid = cpuid::ThermalCpuid::read(cpu)?;
         if !cpuid.has_hfi() {
-            return Err(io::Error::new(io::ErrorKind::Other, "HFI is not supported"));
+            return Err(io::Error::other("HFI is not supported"));
         }
         let ptr = msr::HwFeedbackPtr::read(cpu)?;
         let config = msr::HwFeedbackConfig::read(cpu)?;
         if !ptr.valid() || !config.enable() {
-            return Err(io::Error::new(io::ErrorKind::Other, "HFI is not enabled"));
+            return Err(io::Error::other("HFI is not enabled"));
         }
         if !cpuid.has_perf_cap() || !cpuid.has_ee_cap() {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "HFI capability is not supported",
-            ));
+            return Err(io::Error::other("HFI capability is not supported"));
         }
         Ok(Self {
             cpu,
