@@ -16,7 +16,7 @@ pub trait Cpuid<const EAX: u32, const ECX: u32> {
     where
         Self: Sized + From<[u32; 4]>,
     {
-        let mut fd = File::open(format!("/dev/cpu/{}/cpuid", cpu))?;
+        let mut fd = File::open(format!("/dev/cpu/{cpu}/cpuid"))?;
         let mut buf = [0u8; 16];
         let pos = ((Self::ECX as u64) << 32) | (Self::EAX as u64);
         fd.seek(SeekFrom::Start(pos))?;

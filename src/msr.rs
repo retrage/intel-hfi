@@ -15,7 +15,7 @@ pub trait Msr<const ADDR: u32> {
     where
         Self: Sized + From<u64>,
     {
-        let mut fd = File::open(format!("/dev/cpu/{}/msr", cpu))?;
+        let mut fd = File::open(format!("/dev/cpu/{cpu}/msr"))?;
         let mut buf = [0u8; 8];
         fd.seek(SeekFrom::Start(Self::ADDR as u64))?;
         fd.read_exact(&mut buf)?;
@@ -27,7 +27,7 @@ pub trait Msr<const ADDR: u32> {
     where
         Self: Into<u64>,
     {
-        let mut fd = File::open(format!("/dev/cpu/{}/msr", cpu))?;
+        let mut fd = File::open(format!("/dev/cpu/{cpu}/msr"))?;
         let buf = value.to_le_bytes();
         fd.seek(SeekFrom::Start(Self::ADDR as u64))?;
         fd.write_all(&buf)?;
