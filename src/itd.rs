@@ -75,7 +75,7 @@ impl fmt::Display for ItdInfo {
         writeln!(f, "  HRESET enabled: {}", self.hreset_enabled())?;
         write!(f, "  ITD class ID: ")?;
         match self.class_id() {
-            Some(class_id) => write!(f, "{}", class_id),
+            Some(class_id) => write!(f, "{class_id}"),
             None => write!(f, "None"),
         }
     }

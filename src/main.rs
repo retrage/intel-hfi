@@ -61,7 +61,7 @@ fn main() -> io::Result<()> {
 
     let hfi_info = hfi::HfiInfo::new(cli.cpu)?;
     println!("HFI Table:");
-    println!("{}", hfi_info);
+    println!("{hfi_info}");
 
     match &cli.command {
         Commands::Hfi(args) => {
@@ -72,7 +72,7 @@ fn main() -> io::Result<()> {
 
             if args.all {
                 for cpu in 0..NUM_CPUS {
-                    println!("  CPU {}:", cpu);
+                    println!("  CPU {cpu}:");
                     println!("{}", table.entries[cpu]);
                 }
             } else {
@@ -99,7 +99,7 @@ fn main() -> io::Result<()> {
 
             if args.all {
                 for cpu in 0..NUM_CPUS {
-                    println!("  CPU {}:", cpu);
+                    println!("  CPU {cpu}:");
                     println!("{}", table.entries[cpu]);
                 }
             } else {
@@ -117,13 +117,13 @@ fn main() -> io::Result<()> {
                 for cpu in 0..NUM_CPUS {
                     let hfi_info = hfi::HfiInfo::new(cpu)?;
                     let itd_info = ItdInfo::new(&hfi_info);
-                    println!("ITD Table (CPU {}):", cpu);
-                    println!("{}", itd_info);
+                    println!("ITD Table (CPU {cpu}):");
+                    println!("{itd_info}");
                 }
             } else {
                 let itd_info = ItdInfo::new(&hfi_info);
                 println!("ITD Table (CPU {}):", cli.cpu);
-                println!("{}", itd_info);
+                println!("{itd_info}");
             }
         }
     }

@@ -141,7 +141,7 @@ impl HfiHeader {
 impl fmt::Display for HfiHeader {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let timestamp = self.timestamp;
-        writeln!(f, "  Timestamp: {}", timestamp)?;
+        writeln!(f, "  Timestamp: {timestamp}")?;
         writeln!(f, "  Performance Capability:")?;
         writeln!(f, "{}", self.perf_cap)?;
         writeln!(f, "  Energy Efficiency Capability:")?;

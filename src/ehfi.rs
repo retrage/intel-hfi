@@ -90,9 +90,9 @@ impl EhfiHeader {
 impl fmt::Display for EhfiHeader {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let timestamp = self.timestamp;
-        writeln!(f, "  Timestamp: {}", timestamp)?;
+        writeln!(f, "  Timestamp: {timestamp}")?;
         for cap in 0..NUM_CAPS {
-            writeln!(f, "  Capability #{}:", cap)?;
+            writeln!(f, "  Capability #{cap}:")?;
             write!(f, "{}", self.caps[cap])?;
             if cap < NUM_CAPS - 1 {
                 writeln!(f)?;
@@ -135,9 +135,9 @@ impl EhfiEntry {
 impl fmt::Display for EhfiEntry {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (index, class) in self.caps.iter().enumerate() {
-            writeln!(f, "  Class #{}:", index)?;
+            writeln!(f, "  Class #{index}:")?;
             for (index, cap) in class.cap.iter().enumerate() {
-                write!(f, "    Capability #{}: {}", index, cap)?;
+                write!(f, "    Capability #{index}: {cap}")?;
                 if index < NUM_CLASSES - 1 {
                     writeln!(f)?;
                 }
