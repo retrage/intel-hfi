@@ -43,6 +43,7 @@ impl ItdInfo {
         }
     }
 
+    #[allow(dead_code)]
     pub fn hreset_enabled(&self) -> bool {
         match msr::HresetEnable::read(self.cpu) {
             Ok(config) => config.enable(),
@@ -58,6 +59,7 @@ impl ItdInfo {
         }
     }
 
+    #[allow(dead_code)]
     pub fn class_id(&self) -> Option<usize> {
         match msr::ThreadFeedbackChar::read(self.cpu) {
             Ok(char) => match char.valid() {
